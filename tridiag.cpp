@@ -4,43 +4,6 @@
 #include <vector>
 using namespace std;
 
-//template <typename T>
-class Matrix {
-private:
-   double* m;
-   int rows, cols;
-   //This one does not initialize
-   Matrix(int r, int c, char*) : rows(r), cols(c), m(new double[r*c]) {}
-public:
-   Matrix(int r, int c, double val = 0) : rows(r), cols(c), m(new double[rows*cols]) {
-      for(int i = 0; i < rows*cols; ++i)
-         m[i] = val;
-   }
-
-   ~Matrix() { delete [] m; }
-
-   Matrix(const Matrix& orig); //TODO copy constructor
-   Matrix& operator=(const Matrix& orig); //TODO
-   Matrix(Matrix&& orig) : rows(orig.rows), cols(orig.cols), m(orig.m) { // Move constructor
-      orig.m = nullptr;
-   }
-
-   friend Matrix operator+(const Matrix& a, const Matrix& b) {
-      if(a.rows != b.rows || a.cols != b.cols)
-         throw "Bad size";
-      Matrix ans(a.rows, a.cols, "internal");
-      // for(int i = 0; i < a.rows; ++i)
-      //    for(int j = 0; j < a.cols; ++j)
-      //       ans.m[i*cols + j] = a.m[i*cols+j] + b.m[i*cols+j];
-
-      //More effiecent for addition : slightly faster
-      for(int i = 0; i < a.rows*a.cols; ++i)
-         ans.m[i] = a.m[i] + b.m[i];
-
-      return ans;
-   }
-
-};
 
 class Point{
 public:
@@ -54,23 +17,70 @@ public:
   ~Point(){}
 };
 
+class TriDiag{
+private:
+  double *_matrix;
+  int _size;
+public:
+  TriDiag(int size) : _size(size), _matrix(new double[size*size]){
+    for (int i = 0; i < _size*_size; i++)
+      _matrix[i] = 0;
+    for(int i = 0; i < _size*_size; i++){
+      set(1, i, i-1);
+      set(4, i, i);
+      set(1, i, i+1);
+    }
+    set(2, 0, 0);
+
+  }
+  void set(double val, int row, int col){
+    if(col > row +1)
+      return;
+    else if (col < row -1)
+      return;
+    else if (row < 0)
+      return;
+    else if (col < 0 )
+      return;
+    else if (col >= _size)
+      return;
+    else if( row >= _size)
+      return;
+
+    _matrix[_size*row-col] = val;
+  }
+  ~TriDiag(){ delete [] _matrix;}
+  void getVals(int i, int j){
+        cout << _matrix[_size*i+j] << '\n';
+      }
+  void printMatrix(){
+    for(int i = 0; i <_size*_size; i++){
+        cout << "Matrix at position: " << i << ": " << _matrix[i] << '\n';
+    }
+  }
+
+};
+
+
 int main(){
   ifstream f("splinehw.dat");
   string s;
   string b;
   Point a;
-  GrowArray<Point> points;
+  vector<Point> points;
   int count;
+  TriDiag t(3);
+  t.getVals(1,1);
+  t.printMatrix();
   while (getline(f, s)){
     if (count++ > 0){
     istringstream iss(s);
     for(s; iss >> a.x >> a.y; )
       cout << a << '\n';
-      points.add_back(a);
+      points.push_back(a);
     }
     if (s == "")
       break;
   }
-  cout << points;
   return 0;
 }
